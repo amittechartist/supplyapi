@@ -21,7 +21,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/supplier_form_store', [Apicontroller::class, 'supplier_form_store']);
 Route::get('/supplier_form_list', [Apicontroller::class, 'supplier_form_list']);
 Route::get('/supplier_form_get/{id}', [Apicontroller::class, 'supplier_form_get']);
+Route::get('/supplier_form_get_payment/{id}', [Apicontroller::class, 'supplier_form_get_payment']);
 Route::get('/deleteformsupply/{id}', [Apicontroller::class, 'deleteformsupply']);
 Route::post('/slip_store', [Apicontroller::class, 'slip_store']);
 Route::get('/slip_list', [Apicontroller::class, 'slip_list']);
 Route::get('/get_aadhar_list', [Apicontroller::class, 'get_aadhar_list']);
+Route::post('/payment_handel', [Apicontroller::class, 'payment_handel']);
+Route::get('/rez', [Apicontroller::class, 'rez']);

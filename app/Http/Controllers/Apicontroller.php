@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use Illuminate\Support\Facades\Storage;
+use GuzzleHttp\Client;
 
 class Apicontroller extends Controller
 {
@@ -46,9 +47,16 @@ class Apicontroller extends Controller
         $data['form_accounts'] = DB::table('party_accounts')->where('supplier_form_id',$id)->get();
         return $data;
     }
+    public function supplier_form_get_payment($id){
+        $data = array();
+        $data['form_data'] = DB::table('supplier_form')->where('id',$id)->first();
+        $data['form_accounts'] = DB::table('party_accounts')->select('id as value', 'account_no as label')->where('supplier_form_id',$id)->get();
+        return $data;
+    }
     public function get_aadhar_list(){
         return DB::table('supplier_form')->select('id as value', 'aadhar_no as label')->get();
     }
+    
     public function slip_list(){
         return DB::table('slip')->orderBy('id','DESC')->get();
     }
@@ -83,5 +91,98 @@ class Apicontroller extends Controller
         $data['netweight'] = $req->netweight;
         $insert_id = DB::table('slip')->insertGetId($data);
         return $insert_id;
+    }
+    public function payment_handel(Request $req){
+
+    }    
+    public function rez(Request $req){
+        
+        if(!$req->con){
+        $apiKey = 'rzp_test_SIGjuGKyuuGdO9';
+        $apiSecret = 'V9QURyJJ88Tme08nu3e3lwZf';
+        $url = 'https://api.razorpay.com/v1/contacts';
+
+        $client = new Client();
+
+        $data = [
+            'name' => 'Gaurav Kumar',
+            'email' => 'gaurav.kumar@example.com',
+            'contact' => '9123456789',
+            'type' => 'employee',
+            'reference_id' => 'Acme Contact ID 12345',
+            'notes' => [
+                'notes_key_1' => 'Tea, Earl Grey, Hot',
+                'notes_key_2' => 'Tea, Earl Grey… decaf.',
+            ],
+        ];
+
+        $headers = [
+            'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
+            'Content-Type' => 'application/json',
+        ];
+
+        $response = $client->post($url, [
+            'headers' => $headers,
+            'json' => $data,
+        ]);
+
+        $statusCode = $response->getStatusCode();
+        $body = $response->getBody()->getContents();
+
+        // You can handle the response here according to your application's logic
+        // return response()->json(['status_code' => $statusCode, 'response' => ]);
+        $res_contact_data = json_decode($body);
+        if($res_contact_data){
+            if($res_contact_data->id){
+                // return response()->json(['id' => $res_contact_data->id]);
+                return $this->insertbank($res_contact_data->id);
+            }
+        }
+    }else{
+        
+        return $this->insertbank($req->con);
+    }
+    } 
+    public function insertbank($id=''){
+        if($id){
+            $apiKey = 'rzp_test_SIGjuGKyuuGdO9';
+            $apiSecret = 'V9QURyJJ88Tme08nu3e3lwZf';
+            $url = 'https://api.razorpay.com/v1/fund_accounts';
+    
+            $client = new Client();
+    
+            $data = [
+                'contact_id' => $id,
+                'account_type' => 'bank_account',
+                'bank_account' => [
+                    'name' => 'Pintu dev',
+                    'ifsc' => 'HDFC0000055',
+                    'account_number' => '765432123456778',
+                ],
+            ];
+    
+            $headers = [
+                'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
+                'Content-Type' => 'application/json',
+            ];
+    
+            try {
+                $response = $client->post($url, [
+                    'headers' => $headers,
+                    'json' => $data,
+                ]);
+    
+                $statusCode = $response->getStatusCode();
+                $body = $response->getBody()->getContents();
+    
+                // Check for successful response
+                
+                return response()->json(['status_code' => $statusCode, 'response' => json_decode($body), 'id' => $id]);
+                
+            } catch (\Exception $e) {
+                // Handle exceptions (e.g., network issues or API errors) here
+                return response()->json(['status_code' => 500, 'error' => $e->getMessage()]);
+            }
+        }
     }
 }

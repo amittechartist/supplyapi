@@ -28,3 +28,34 @@ Route::get('/slip_list', [Apicontroller::class, 'slip_list']);
 Route::get('/get_aadhar_list', [Apicontroller::class, 'get_aadhar_list']);
 Route::post('/payment_handel', [Apicontroller::class, 'payment_handel']);
 Route::get('/rez', [Apicontroller::class, 'rez']);
+
+// ADMIN
+Route::post('/register',[ApiController::class,'register']);
+Route::post('/adminlogin',[ApiController::class,'adminlogin']);
+// PRODUCT
+Route::post('/addproduct',[ApiController::class,'addproduct']);
+Route::get('/getproducts',[ApiController::class,'getproducts']);
+Route::get('/getproductsnew',[ApiController::class,'getproductsnew']);
+Route::get('/getproductsbycat',[ApiController::class,'getProductsByCat']);
+Route::get('/getproductbyid/{id}',[ApiController::class,'getProductByID']);
+Route::get('/deleteproduct/{id}',[ApiController::class,'deleteproduct']);
+Route::get('/productedit/{pid}',[ApiController::class,'productedit']);
+Route::get('/viewproduct/{pid}',[ApiController::class,'viewproduct']);
+// CATEGORY
+Route::post('/addcategory',[ApiController::class,'addcategory']);
+Route::get('/categorylist',[ApiController::class,'categorylist']);
+Route::get('/deletecategory/{id}',[ApiController::class,'deletecategory']);
+Route::get('/editcategory/{id}',[ApiController::class,'editcategory']);
+// WISHLIST
+Route::post('/addtowishlist',[ApiController::class,'addtowishlist']);
+Route::post('/checkout',[ApiController::class,'checkout']);
+
+
+// WEBSITE
+Route::post('/newregistration',[ApiController::class,'newregistration']);
+Route::post('/login',[ApiController::class,'login']);
+//USER
+Route::get('/userprofile',[ApiController::class,'userprofile']);
+Route::get('/con_email_edit/{id}',[ApiController::class,'con_email_edit']);
+//ORDERS
+Route::get('/orders',[ApiController::class,'orders']);

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.1.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1:3306
--- Generation Time: Sep 23, 2023 at 05:21 PM
--- Server version: 10.5.19-MariaDB-cll-lve
--- PHP Version: 7.2.34
+-- Host: 127.0.0.1
+-- Generation Time: Sep 25, 2023 at 08:57 PM
+-- Server version: 10.4.27-MariaDB
+-- PHP Version: 8.2.0
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `u212008457_ddd`
+-- Database: `supplyapi`
 --
 
 -- --------------------------------------------------------
@@ -194,23 +194,82 @@ CREATE TABLE `party_accounts` (
   `id` int(11) NOT NULL,
   `supplier_form_id` text DEFAULT NULL,
   `account_no` text DEFAULT NULL,
-  `ifsc` text DEFAULT NULL
+  `ifsc` text DEFAULT NULL,
+  `customer_id` text DEFAULT NULL,
+  `customer_res` text DEFAULT NULL,
+  `fundaccount_id` text DEFAULT NULL,
+  `fundaccount_res` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `party_accounts`
 --
 
-INSERT INTO `party_accounts` (`id`, `supplier_form_id`, `account_no`, `ifsc`) VALUES
-(1, '4', '[\'123\',\'456\',\'789\']', '[\'1231\',\'4561\',\'7891\']'),
-(2, '1', '232', '232'),
-(3, '1', '232', '232'),
-(4, '2', '3434', '3434'),
-(5, '1', '3434', '3434'),
-(6, '1', '343', '3443'),
-(7, '3', '864824382', 'KKBK0002'),
-(8, '4', '12345679897', 'SBI0225457'),
-(9, '1', '12346799799', 'sbiok76755');
+INSERT INTO `party_accounts` (`id`, `supplier_form_id`, `account_no`, `ifsc`, `customer_id`, `customer_res`, `fundaccount_id`, `fundaccount_res`) VALUES
+(1, '1', '7894561233', 'SBI012478', 'cont_MgepN7tuOS1KO8', '{\"id\":\"cont_MgepN7tuOS1KO8\",\"entity\":\"contact\",\"name\":\"Dipak\",\"contact\":\"7894561233\",\"email\":\"\",\"type\":\"customer\",\"reference_id\":\"Acme Contact ID 12345\",\"batch_id\":null,\"active\":true,\"notes\":{\"notes_key_1\":\"Tea, Earl Grey, Hot\",\"notes_key_2\":\"Tea, Earl Grey\\u2026 decaf.\"},\"created_at\":1695664371}', NULL, NULL),
+(2, '1', '78945813555', 'SBI012478', 'cont_MgepN7tuOS1KO8', '{\"id\":\"cont_MgepN7tuOS1KO8\",\"entity\":\"contact\",\"name\":\"Dipak\",\"contact\":\"7894561233\",\"email\":\"\",\"type\":\"customer\",\"reference_id\":\"Acme Contact ID 12345\",\"batch_id\":null,\"active\":true,\"notes\":{\"notes_key_1\":\"Tea, Earl Grey, Hot\",\"notes_key_2\":\"Tea, Earl Grey\\u2026 decaf.\"},\"created_at\":1695664371}', NULL, NULL),
+(3, '2', '32323', 'dsdsds', NULL, NULL, NULL, NULL),
+(4, '3', '32323', '23232', NULL, NULL, NULL, NULL),
+(5, '4', '123459799779797', 'SBIN0005704', 'cont_Mgf0xceHPgcfos', '{\"id\":\"cont_Mgf0xceHPgcfos\",\"entity\":\"contact\",\"name\":\"Rosan\",\"contact\":\"7894561232\",\"email\":\"\",\"type\":\"customer\",\"reference_id\":\"Acme Contact ID 12345\",\"batch_id\":null,\"active\":true,\"notes\":{\"notes_key_1\":\"Tea, Earl Grey, Hot\",\"notes_key_2\":\"Tea, Earl Grey\\u2026 decaf.\"},\"created_at\":1695665029}', 'fa_MgfVC3AJpLZljl', '{\"id\":\"fa_MgfVC3AJpLZljl\",\"entity\":\"fund_account\",\"contact_id\":\"cont_Mgf0xceHPgcfos\",\"account_type\":\"bank_account\",\"bank_account\":{\"ifsc\":\"SBIN0005704\",\"bank_name\":\"State Bank of India\",\"name\":\"Rosan\",\"notes\":[],\"account_number\":\"123459799779797\"},\"batch_id\":null,\"active\":true,\"created_at\":1695666746}'),
+(6, '4', '123459799779795', 'SBIN0005704', 'cont_Mgf0xceHPgcfos', '{\"id\":\"cont_Mgf0xceHPgcfos\",\"entity\":\"contact\",\"name\":\"Rosan\",\"contact\":\"7894561232\",\"email\":\"\",\"type\":\"customer\",\"reference_id\":\"Acme Contact ID 12345\",\"batch_id\":null,\"active\":true,\"notes\":{\"notes_key_1\":\"Tea, Earl Grey, Hot\",\"notes_key_2\":\"Tea, Earl Grey\\u2026 decaf.\"},\"created_at\":1695665029}', 'fa_MgfWLHQxremtDK', '{\"id\":\"fa_MgfWLHQxremtDK\",\"entity\":\"fund_account\",\"contact_id\":\"cont_Mgf0xceHPgcfos\",\"account_type\":\"bank_account\",\"bank_account\":{\"ifsc\":\"SBIN0005704\",\"bank_name\":\"State Bank of India\",\"name\":\"Rosan\",\"notes\":[],\"account_number\":\"123459799779795\"},\"batch_id\":null,\"active\":true,\"created_at\":1695666811}');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_init`
+--
+
+CREATE TABLE `payment_init` (
+  `id` int(11) NOT NULL,
+  `customer_id` text DEFAULT NULL,
+  `fundaccount_id` text DEFAULT NULL,
+  `date` text DEFAULT NULL,
+  `supplyid` text DEFAULT NULL,
+  `account_id` text DEFAULT NULL,
+  `account_no` text DEFAULT NULL,
+  `ifsc_number` text DEFAULT NULL,
+  `timeis` text DEFAULT NULL,
+  `amount` text DEFAULT NULL,
+  `status` text DEFAULT NULL,
+  `payoutid` text DEFAULT NULL,
+  `partyname` text DEFAULT NULL,
+  `partyaadharnumber` text DEFAULT NULL,
+  `partyphonenumber` text DEFAULT NULL,
+  `selectpayment_typeid` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `payment_init`
+--
+
+INSERT INTO `payment_init` (`id`, `customer_id`, `fundaccount_id`, `date`, `supplyid`, `account_id`, `account_no`, `ifsc_number`, `timeis`, `amount`, `status`, `payoutid`, `partyname`, `partyaadharnumber`, `partyphonenumber`, `selectpayment_typeid`) VALUES
+(1, 'cont_Mgf0xceHPgcfos', 'fa_MgfVC3AJpLZljl', '25-09-2023', '4', '5', '123459799779797', 'SBIN0005704', '1695667814', '10', '2', 'pout_Mgfo1uDXDAOnmf', 'Rosan', '7894598956', '7894561232', '1');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payout_log`
+--
+
+CREATE TABLE `payout_log` (
+  `id` int(11) NOT NULL,
+  `payment_id` text DEFAULT NULL,
+  `date` text DEFAULT NULL,
+  `account_table_id` text DEFAULT NULL,
+  `fund_id` text DEFAULT NULL,
+  `supply_table_id` text DEFAULT NULL,
+  `amount` double DEFAULT NULL,
+  `time` text DEFAULT NULL,
+  `payout_res` text DEFAULT NULL,
+  `init_id` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `payout_log`
+--
+
+INSERT INTO `payout_log` (`id`, `payment_id`, `date`, `account_table_id`, `fund_id`, `supply_table_id`, `amount`, `time`, `payout_res`, `init_id`) VALUES
+(1, 'pout_Mgfo1uDXDAOnmf', '25-09-2023', '5', 'fa_MgfVC3AJpLZljl', '4', 1000, '1695667816', '{\"id\":\"pout_Mgfo1uDXDAOnmf\",\"entity\":\"payout\",\"fund_account_id\":\"fa_MgfVC3AJpLZljl\",\"amount\":1000,\"currency\":\"INR\",\"notes\":{\"notes_key_1\":\"Tea, Earl Grey, Hot\",\"notes_key_2\":\"Tea, Earl Grey\\u2026 decaf.\"},\"fees\":0,\"tax\":0,\"status\":\"processing\",\"purpose\":\"payout\",\"utr\":null,\"mode\":\"IMPS\",\"reference_id\":\"Acme Transaction ID 12345\",\"narration\":\"Acme Corp Fund Transfer\",\"batch_id\":null,\"failure_reason\":null,\"created_at\":1695667816,\"fee_type\":\"free_payout\",\"status_details\":{\"reason\":null,\"description\":null,\"source\":null},\"merchant_id\":\"E9m5M3ZlKfeeFK\",\"status_details_id\":null,\"error\":{\"source\":null,\"reason\":null,\"description\":null,\"code\":\"NA\",\"step\":\"NA\",\"metadata\":{}}}', '1');
 
 -- --------------------------------------------------------
 
@@ -406,6 +465,26 @@ INSERT INTO `slip` (`id`, `supply_id`, `trno`, `vehicleno`, `typeofmaterial`, `d
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `status`
+--
+
+CREATE TABLE `status` (
+  `id` int(11) NOT NULL,
+  `name` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `status`
+--
+
+INSERT INTO `status` (`id`, `name`) VALUES
+(1, 'Success'),
+(2, 'Pending'),
+(3, 'Failed');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `supplier_form`
 --
 
@@ -417,18 +496,20 @@ CREATE TABLE `supplier_form` (
   `phone_number` text DEFAULT NULL,
   `address` text DEFAULT NULL,
   `remark` text DEFAULT NULL,
-  `photo` text DEFAULT NULL
+  `photo` text DEFAULT NULL,
+  `customer_id` text DEFAULT NULL,
+  `customer_res` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `supplier_form`
 --
 
-INSERT INTO `supplier_form` (`id`, `name`, `aadhar_no`, `date`, `phone_number`, `address`, `remark`, `photo`) VALUES
-(1, 'tets', '3434', '16-09-2023', '1234567890', 'dsd', 'sds', 'images/4167159_1694872558.png'),
-(2, 'sds', '23434', '16-09-2023', '3434', 'dsds', 'wwew', 'images/3660197_1694873063.png'),
-(3, 'undefined', '656678990122', '20-09-2023', '9177378205', 'Hyderabad, Telagana,50019 India', 'undefined', NULL),
-(4, 'Dipak Barman', '1234578945232564', '23-09-2023', '7719132119', 'hatiyadanga', 'test', NULL);
+INSERT INTO `supplier_form` (`id`, `name`, `aadhar_no`, `date`, `phone_number`, `address`, `remark`, `photo`, `customer_id`, `customer_res`) VALUES
+(1, 'Dipak', '7894561230', '25-09-2023', '7894561233', 'test', 'test', NULL, 'cont_MgepN7tuOS1KO8', '{\"id\":\"cont_MgepN7tuOS1KO8\",\"entity\":\"contact\",\"name\":\"Dipak\",\"contact\":\"7894561233\",\"email\":\"\",\"type\":\"customer\",\"reference_id\":\"Acme Contact ID 12345\",\"batch_id\":null,\"active\":true,\"notes\":{\"notes_key_1\":\"Tea, Earl Grey, Hot\",\"notes_key_2\":\"Tea, Earl Grey\\u2026 decaf.\"},\"created_at\":1695664371}'),
+(2, 'sds', '434', '25-09-2023', '34343', '343', 'wwew', NULL, NULL, NULL),
+(3, 'wewe', '23232', '25-09-2023', '2323', 'weew', 'wewe', NULL, NULL, NULL),
+(4, 'Rosan', '7894598956', '25-09-2023', '7894561232', 'test', 'test', NULL, 'cont_Mgf0xceHPgcfos', '{\"id\":\"cont_Mgf0xceHPgcfos\",\"entity\":\"contact\",\"name\":\"Rosan\",\"contact\":\"7894561232\",\"email\":\"\",\"type\":\"customer\",\"reference_id\":\"Acme Contact ID 12345\",\"batch_id\":null,\"active\":true,\"notes\":{\"notes_key_1\":\"Tea, Earl Grey, Hot\",\"notes_key_2\":\"Tea, Earl Grey\\u2026 decaf.\"},\"created_at\":1695665029}');
 
 -- --------------------------------------------------------
 
@@ -499,6 +580,18 @@ ALTER TABLE `party_accounts`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `payment_init`
+--
+ALTER TABLE `payment_init`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `payout_log`
+--
+ALTER TABLE `payout_log`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `product`
 --
 ALTER TABLE `product`
@@ -514,6 +607,12 @@ ALTER TABLE `selectedsizes`
 -- Indexes for table `slip`
 --
 ALTER TABLE `slip`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `status`
+--
+ALTER TABLE `status`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -572,7 +671,19 @@ ALTER TABLE `orders`
 -- AUTO_INCREMENT for table `party_accounts`
 --
 ALTER TABLE `party_accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `payment_init`
+--
+ALTER TABLE `payment_init`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `payout_log`
+--
+ALTER TABLE `payout_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `product`
@@ -591,6 +702,12 @@ ALTER TABLE `selectedsizes`
 --
 ALTER TABLE `slip`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `status`
+--
+ALTER TABLE `status`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `supplier_form`

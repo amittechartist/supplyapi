@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Client;
 
 class Apicontroller extends Controller
+// ApiKey = 'rzp_test_SIGjuGKyuuGdO9'
+// ApiSecret = 'V9QURyJJ88Tme08nu3e3lwZf'
 {
     public function supplier_form_list(Request $req){
         $list = DB::table('supplier_form')->orderBy('id','DESC')->get();
@@ -36,10 +38,19 @@ class Apicontroller extends Controller
             $data['supplier_form_id'] = $insert_id;
             $data['account_no'] = $account->accountNumber;
             $data['ifsc'] = $account->ifscCode;
-            $insert_id = DB::table('party_accounts')->insert($data);
+            DB::table('party_accounts')->insert($data);
             }
         }
+        $customer_create_res = $this->customer_account_create($insert_id);
         return $insert_id;
+    }
+    public function fundaccount_create(Request $req){
+        $get = DB::table('party_accounts')->where('supplier_form_id',$req->id)->get();
+        if($get){
+            foreach($get as $list){
+               $this->fund_account_create($list->id,$list->supplier_form_id);
+            }
+        }
     }
     public function supplier_form_get($id){
         $data = array();
@@ -93,10 +104,228 @@ class Apicontroller extends Controller
         return $insert_id;
     }
     public function payment_handel(Request $req){
+        $partyid = $req->partyid;
+        $partyname = $req->partyname;
+        $partyaadharnumber = $req->partyaadharnumber;
+        $partyphonenumber = $req->partyphonenumber;
+        $accountid = $req->accountid;
+        $amount = $req->amount;
+        $selectpayment_typeid = $req->selectpayment_typeid;
+        $check_fund_account = DB::table('party_accounts')->where('id',$accountid)->where('supplier_form_id',$partyid)->count();
+        if($check_fund_account > 0){
+            $get_fund_account = DB::table('party_accounts')->where('id',$accountid)->where('supplier_form_id',$partyid)->first();
+                $data = array();
+                $data['customer_id'] = $get_fund_account->customer_id;
+                $data['fundaccount_id'] = $get_fund_account->fundaccount_id;
+                $data['date'] = date('d-m-Y');
+                $data['supplyid'] = $get_fund_account->supplier_form_id;
+                $data['account_id'] = $get_fund_account->id;
+                $data['account_no'] = $get_fund_account->account_no;
+                $data['ifsc_number'] = $get_fund_account->ifsc;
+                $data['timeis'] = time();
+                $data['amount'] = $amount;
+                $data['status'] = 2; 
+                $data['partyname'] = $partyname;
+                $data['partyaadharnumber'] = $partyaadharnumber;
+                $data['partyphonenumber'] = $partyphonenumber;
+                $data['selectpayment_typeid'] = $selectpayment_typeid;
+                $last_insert_id = DB::table('payment_init')->insertGetId($data);
+            if(!$get_fund_account->fundaccount_id){
+                $fund_account_res = $this->fund_account_create($accountid,$partyid);
+                if($fund_account_res->status_code == 200){
+                    
+                }else{
+                    return response()->json(['status_code' => 400, 'response' => 'Server is busy try again']);        
+                }   
+            }
 
-    }    
+            $get_fundaccount_data = DB::table('party_accounts')->where('id',$get_fund_account->id)->first();
+            $payoutres = $this->sendpayout($get_fundaccount_data->fundaccount_id,$amount,$last_insert_id,$get_fundaccount_data->id,$get_fundaccount_data->supplier_form_id);
+            $jsonData = $payoutres->getData(); // Decoding the JSON response
+            $status_code = $jsonData->status_code;
+            if($status_code == 200){
+                return response()->json(['status_code' => 200, 'response' => 'Payout Successful']);
+            }else{
+                return response()->json(['status_code' => 400, 'response' => 'Server is busy try again']);
+            }
+        }else{
+            return response()->json(['status_code' => 400, 'response' => 'Invalid account']);
+        }
+    } 
+    public function fund_account_create($accountid,$partyid){
+        $get_party_accounts = DB::table('party_accounts')->where('supplier_form_id',$partyid)->where('id',$accountid)->first();
+        $get_party_table = DB::table('supplier_form')->where('id',$partyid)->first();
+        if($get_party_accounts->customer_id){
+            $apiKey = env('ApiKey');
+            $apiSecret = env('ApiSecret');
+            $url = 'https://api.razorpay.com/v1/fund_accounts';
+    
+            $client = new Client();
+    
+            $data = [
+                'contact_id' => $get_party_accounts->customer_id,
+                'account_type' => 'bank_account',
+                'bank_account' => [
+                    'name' => $get_party_table->name,
+                    'ifsc' => $get_party_accounts->ifsc,
+                    'account_number' => $get_party_accounts->account_no,
+                ],
+            ];
+    
+            $headers = [
+                'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
+                'Content-Type' => 'application/json',
+            ];
+    
+            try {
+                $response = $client->post($url, [
+                    'headers' => $headers,
+                    'json' => $data,
+                ]);
+    
+                $statusCode = $response->getStatusCode();
+                $body = $response->getBody()->getContents();
+                $get_body_format = json_decode($body);
+                if($get_body_format){
+                    $data = array();
+                    $data['fundaccount_id'] = $get_body_format->id;
+                    $data['fundaccount_res'] = $body;
+                    DB::table('party_accounts')->where('id',$accountid)->update($data);
+                }
+                return response()->json(['status_code' => 200, 'response' => json_decode($body)]);
+                
+            } catch (\Exception $e) {
+                $errorMessage = $e->getMessage(); // Get the error message
+
+                // Use regular expressions to extract the desired error message
+                $pattern = '/"description":"(.*?)"/';
+                if (preg_match($pattern, $errorMessage, $matches)) {
+                    $specificErrorMessage = json_decode('"' . $matches[1] . '"'); // Decode the captured JSON string
+                    // $specificErrorMessage now contains: "The ifsc must be 11 characters"
+                } else {
+                    // Handle the case where the error message format is not as expected
+                    $specificErrorMessage = "Unknown Error";
+                }
+            
+                return response()->json(['status_code' => 400, 'error' => $specificErrorMessage]);
+            }
+        }else{
+            $check_res = $this->customer_account_create($partyid);
+            if($check_res->status_code == 200){
+                fund_account_create($accountid,$partyid);
+            }else{
+                return response()->json(['status_code' => 400, 'error' => 'Server is busy try again']);
+            }
+        }
+    }   
+    public function customer_account_create($partyid){
+        $get = DB::table('supplier_form')->where('id',$partyid)->first();
+        $apiKey = env('ApiKey');
+        $apiSecret = env('ApiSecret');
+        $url = 'https://api.razorpay.com/v1/contacts';
+        $client = new Client();
+        $data = [
+            'name' => $get->name,
+            'email' => '',
+            'contact' => $get->phone_number,
+            'type' => 'customer',
+            'reference_id' => 'Acme Contact ID 12345',
+            'notes' => [
+                'notes_key_1' => 'Tea, Earl Grey, Hot',
+                'notes_key_2' => 'Tea, Earl Grey… decaf.',
+            ],
+        ];
+
+        $headers = [
+            'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
+            'Content-Type' => 'application/json',
+        ];
+        try {
+            $response = $client->post($url, [
+                'headers' => $headers,
+                'json' => $data,
+            ]);
+    
+            $statusCode = $response->getStatusCode();
+            $body = $response->getBody()->getContents(); 
+            $get_body_format = json_decode($body);
+            if($get_body_format){
+                $data = array();
+                $data['customer_id'] = $get_body_format->id;
+                $data['customer_res'] = $body;
+                DB::table('supplier_form')->where('id',$get->id)->update($data);
+                $data = array();
+                $data['customer_id'] = $get_body_format->id;
+                $data['customer_res'] = $body;
+                DB::table('party_accounts')->where('supplier_form_id',$get->id)->update($data);
+            }
+            return response()->json(['status_code' => 200, 'response' => json_decode($body)]);
+        } catch (\Exception $e) {
+            return response()->json(['status_code' => 400, 'error' => 'Server is busy try again']);
+        }
+    }
+    public function sendpayout($fundaccount_id,$amount,$last_insert_id,$id,$supplier_form_id){
+            $amount = $amount*100;
+            $apiKey = env('ApiKey');
+            $apiSecret = env('ApiSecret');
+            $account_number = env('AccountNo');
+            $url = 'https://api.razorpay.com/v1/payouts';
+    
+            $client = new Client();
+    
+            $data = [
+                'account_number'=> $account_number,
+                'fund_account_id'=> $fundaccount_id,
+                'amount'=> $amount,
+                'currency'=> "INR",
+                'mode'=> "IMPS",
+                'purpose'=> "payout",
+                'queue_if_low_balance'=> true,
+                'reference_id'=> "Acme Transaction ID 12345",
+                'narration'=> "Acme Corp Fund Transfer",
+                'notes'=> [
+                    'notes_key_1' =>"Tea, Earl Grey, Hot",
+                    'notes_key_2' => "Tea, Earl Grey… decaf."
+                ]
+            ];
+    
+            $headers = [
+                'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
+                'Content-Type' => 'application/json',
+            ];
+    
+            try {
+                $response = $client->post($url, [
+                    'headers' => $headers,
+                    'json' => $data,
+                ]);
+    
+                $statusCode = $response->getStatusCode();
+                $body = $response->getBody()->getContents();
+                $payout_res = json_decode($body);
+                if($payout_res){
+                    $data = array();
+                    $data['payment_id'] = $payout_res->id;
+                    $data['date'] = date('d-m-Y');
+                    $data['account_table_id'] = $id;
+                    $data['supply_table_id'] = $supplier_form_id;
+                    $data['fund_id'] = $fundaccount_id;
+                    $data['amount'] = $amount;
+                    $data['time'] =  $payout_res->created_at;
+                    $data['init_id'] =  $last_insert_id;
+                    $data['payout_res'] =  $body;
+                    DB::table('payout_log')->insert($data);
+                    DB::table('payment_init')->where('id',$last_insert_id)->update(['payoutid'=>$payout_res->id]);
+                }
+                return response()->json(['status_code' => 200, 'response' => json_decode($body)]);
+                
+            } catch (\Exception $e) {
+                // Handle exceptions (e.g., network issues or API errors) here
+                return response()->json(['status_code' => 500, 'error' => $e->getMessage()]);
+            }
+    }
     public function rez(Request $req){
-        
+        return $this->insertbank('cont_MfmrspseDdZzly');
         if(!$req->con){
         $apiKey = 'rzp_test_SIGjuGKyuuGdO9';
         $apiSecret = 'V9QURyJJ88Tme08nu3e3lwZf';
@@ -128,9 +357,12 @@ class Apicontroller extends Controller
 
         $statusCode = $response->getStatusCode();
         $body = $response->getBody()->getContents();
-
+        $get_body_format = json_decode($body);
+        // if($get_body_format){
+        //     return $get_body_format->id;
+        // }
+        return response()->json(['status_code' => $statusCode, 'response' => $get_body_format]);
         // You can handle the response here according to your application's logic
-        // return response()->json(['status_code' => $statusCode, 'response' => ]);
         $res_contact_data = json_decode($body);
         if($res_contact_data){
             if($res_contact_data->id){
@@ -138,10 +370,10 @@ class Apicontroller extends Controller
                 return $this->insertbank($res_contact_data->id);
             }
         }
-    }else{
-        
-        return $this->insertbank($req->con);
-    }
+        }else{
+            
+            return $this->insertbank($req->con);
+        }
     } 
     public function insertbank($id=''){
         if($id){
@@ -184,6 +416,52 @@ class Apicontroller extends Controller
                 return response()->json(['status_code' => 500, 'error' => $e->getMessage()]);
             }
         }
+    }
+    public function pay(){
+        $apiKey = 'rzp_test_SIGjuGKyuuGdO9';
+            $apiSecret = 'V9QURyJJ88Tme08nu3e3lwZf';
+            $url = 'https://api.razorpay.com/v1/payouts';
+    
+            $client = new Client();
+    
+            $data = [
+                'account_number'=> "2323230051831377",
+                'fund_account_id'=> "fa_MgTnP79LCOHnhG",
+                'amount'=> 500,
+                'currency'=> "INR",
+                'mode'=> "IMPS",
+                'purpose'=> "payout",
+                'queue_if_low_balance'=> true,
+                'reference_id'=> "Acme Transaction ID 12345",
+                'narration'=> "Acme Corp Fund Transfer",
+                'notes'=> [
+                    'notes_key_1' =>"Tea, Earl Grey, Hot",
+                    'notes_key_2' => "Tea, Earl Grey… decaf."
+                ]
+            ];
+    
+            $headers = [
+                'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
+                'Content-Type' => 'application/json',
+            ];
+    
+            try {
+                $response = $client->post($url, [
+                    'headers' => $headers,
+                    'json' => $data,
+                ]);
+    
+                $statusCode = $response->getStatusCode();
+                $body = $response->getBody()->getContents();
+    
+                // Check for successful response
+                
+                return response()->json(['status_code' => $statusCode, 'response' => json_decode($body)]);
+                
+            } catch (\Exception $e) {
+                // Handle exceptions (e.g., network issues or API errors) here
+                return response()->json(['status_code' => 500, 'error' => $e->getMessage()]);
+            }
     }
     //admin//
     public function register(Request $req){

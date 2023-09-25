@@ -1,0 +1,1 @@
+{"status_code":201,"response":{"id":"fa_MgTnP79LCOHnhG","entity":"fund_account","contact_id":"cont_MfmrspseDdZzly","account_type":"bank_account","bank_account":{"ifsc":"HDFC0000055","bank_name":"HDFC Bank","name":"Pintu dev","notes":[],"account_number":"765432123456778"},"batch_id":null,"active":true,"created_at":1695625521},"id":"cont_MfmrspseDdZzly"}

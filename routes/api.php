@@ -28,6 +28,8 @@ Route::get('/slip_list', [Apicontroller::class, 'slip_list']);
 Route::get('/get_aadhar_list', [Apicontroller::class, 'get_aadhar_list']);
 Route::post('/payment_handel', [Apicontroller::class, 'payment_handel']);
 Route::get('/rez', [Apicontroller::class, 'rez']);
+Route::get('/pay', [Apicontroller::class, 'pay']);
+Route::post('/fundaccount_create', [Apicontroller::class, 'fundaccount_create']);
 
 // ADMIN
 Route::post('/register',[ApiController::class,'register']);

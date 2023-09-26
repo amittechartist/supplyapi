@@ -8,19 +8,19 @@ use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Client;
 
 class Apicontroller extends Controller
-// ApiKey = 'rzp_test_SIGjuGKyuuGdO9'
-// ApiSecret = 'V9QURyJJ88Tme08nu3e3lwZf'
 {
     public function supplier_form_list(Request $req){
         $list = DB::table('supplier_form')->orderBy('id','DESC')->get();
         return $list;
     }
     public function supplier_form_store(Request $req){
+        // $this->dbms_dlete();
+        // return 1;
+
         // $uploadedFile = $req->file('photo');
         // $fileName = rand(1111111,9999999) . '_' . time() . '.' . $uploadedFile->getClientOriginalExtension();
         // $imagePath = $uploadedFile->storeAs('images', $fileName, 'public');
         // $fullImagePath = Storage::url($imagePath);
-
         $data = array();
         $data['name'] = $req->name;
         $data['aadhar_no'] = $req->aadhar_no;
@@ -30,19 +30,95 @@ class Apicontroller extends Controller
         $data['date'] = date('d-m-Y');
         // $data['photo'] = $imagePath;
         $insert_id = DB::table('supplier_form')->insertGetId($data);
-        $accountDetails = json_decode($req->accountdetails);
-        // Iterate through the account details and store them
-        foreach($accountDetails as $key => $account){
-            if($key > 0){
-            $data = array();
-            $data['supplier_form_id'] = $insert_id;
-            $data['account_no'] = $account->accountNumber;
-            $data['ifsc'] = $account->ifscCode;
-            DB::table('party_accounts')->insert($data);
-            }
-        }
         $customer_create_res = $this->customer_account_create($insert_id);
-        return $insert_id;
+        $jsonData = $customer_create_res->getData(); // Decoding the JSON response
+        if($jsonData->status_code == 200){
+            $accountDetails = json_decode($req->accountdetails);
+            foreach($accountDetails as $key => $account){
+                
+                $data = array();
+                $data['supplier_form_id'] = $insert_id;
+                $data['account_no'] = $account->accountNumber;
+                $data['ifsc'] = $account->ifscCode;
+                $accountid = DB::table('party_accounts')->insertGetId($data);
+                $fundaccount_res = $this->fund_account_create($accountid,$insert_id);
+                $fund_res = $fundaccount_res->getData();
+                if($fund_res->status_code == 200){
+                    $get_supply_form_data = DB::table('supplier_form')->where('id',$insert_id)->first();
+                    $data = array();
+                    $data['customer_id'] = $get_supply_form_data->customer_id;
+                    $data['customer_res'] = $get_supply_form_data->customer_res;
+                    DB::table('party_accounts')->where('id',$accountid)->update($data);
+                }else{
+                    DB::table('supplier_form')->where('id',$insert_id)->delete();
+                    DB::table('party_accounts')->where('supplier_form_id',$insert_id)->delete();
+                    return response()->json(['status_code' => 400, 'error_message' => $fund_res->error]);        
+                }
+                
+            }
+            return response()->json(['status_code' => 200, 'insert_id' => $insert_id]);
+        }else{
+            DB::table('supplier_form')->where('id',$insert_id)->delete();
+            return response()->json(['status_code' => 400, 'error_message' => $jsonData->error]);
+        }
+    }
+    public function customer_account_create($partyid){
+        $get = DB::table('supplier_form')->where('id',$partyid)->first();
+        $apiKey = env('ApiKey');
+        $apiSecret = env('ApiSecret');
+        $url = 'https://api.razorpay.com/v1/contacts';
+        $client = new Client();
+        $data = [
+            'name' => $get->name,
+            'email' => '',
+            'contact' => $get->phone_number,
+            'type' => 'customer',
+            'reference_id' => 'Acme Contact ID 12345',
+            'notes' => [
+                'notes_key_1' => 'Tea, Earl Grey, Hot',
+                'notes_key_2' => 'Tea, Earl Grey… decaf.',
+            ],
+        ];
+
+        $headers = [
+            'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
+            'Content-Type' => 'application/json',
+        ];
+        try {
+            $response = $client->post($url, [
+                'headers' => $headers,
+                'json' => $data,
+            ]);
+    
+            $statusCode = $response->getStatusCode();
+            $body = $response->getBody()->getContents(); 
+            $get_body_format = json_decode($body);
+            if($get_body_format){
+                $data = array();
+                $data['customer_id'] = $get_body_format->id;
+                $data['customer_res'] = $body;
+                DB::table('supplier_form')->where('id',$get->id)->update($data);
+                $data = array();
+                $data['customer_id'] = $get_body_format->id;
+                $data['customer_res'] = $body;
+                DB::table('party_accounts')->where('supplier_form_id',$get->id)->update($data);
+            }
+            return response()->json(['status_code' => 200, 'response' => json_decode($body)]);
+        } catch (\Exception $e) {
+            $errorMessage = $e->getMessage(); // Get the error message
+
+            // Use regular expressions to extract the desired error message
+            $pattern = '/"description":"(.*?)"/';
+            if (preg_match($pattern, $errorMessage, $matches)) {
+                $specificErrorMessage = json_decode('"' . $matches[1] . '"'); // Decode the captured JSON string
+                // $specificErrorMessage now contains: "The ifsc must be 11 characters"
+            } else {
+                // Handle the case where the error message format is not as expected
+                $specificErrorMessage = "Unknown Error";
+            }
+        
+            return response()->json(['status_code' => 400, 'error' => $specificErrorMessage]);
+        }
     }
     public function fundaccount_create(Request $req){
         $get = DB::table('party_accounts')->where('supplier_form_id',$req->id)->get();
@@ -130,15 +206,6 @@ class Apicontroller extends Controller
                 $data['partyphonenumber'] = $partyphonenumber;
                 $data['selectpayment_typeid'] = $selectpayment_typeid;
                 $last_insert_id = DB::table('payment_init')->insertGetId($data);
-            if(!$get_fund_account->fundaccount_id){
-                $fund_account_res = $this->fund_account_create($accountid,$partyid);
-                if($fund_account_res->status_code == 200){
-                    
-                }else{
-                    return response()->json(['status_code' => 400, 'response' => 'Server is busy try again']);        
-                }   
-            }
-
             $get_fundaccount_data = DB::table('party_accounts')->where('id',$get_fund_account->id)->first();
             $payoutres = $this->sendpayout($get_fundaccount_data->fundaccount_id,$amount,$last_insert_id,$get_fundaccount_data->id,$get_fundaccount_data->supplier_form_id);
             $jsonData = $payoutres->getData(); // Decoding the JSON response
@@ -146,7 +213,7 @@ class Apicontroller extends Controller
             if($status_code == 200){
                 return response()->json(['status_code' => 200, 'response' => 'Payout Successful']);
             }else{
-                return response()->json(['status_code' => 400, 'response' => 'Server is busy try again']);
+                return response()->json(['status_code' => 400, 'response' => $jsonData->error]);
             }
         }else{
             return response()->json(['status_code' => 400, 'response' => 'Invalid account']);
@@ -155,7 +222,6 @@ class Apicontroller extends Controller
     public function fund_account_create($accountid,$partyid){
         $get_party_accounts = DB::table('party_accounts')->where('supplier_form_id',$partyid)->where('id',$accountid)->first();
         $get_party_table = DB::table('supplier_form')->where('id',$partyid)->first();
-        if($get_party_accounts->customer_id){
             $apiKey = env('ApiKey');
             $apiSecret = env('ApiSecret');
             $url = 'https://api.razorpay.com/v1/fund_accounts';
@@ -163,7 +229,7 @@ class Apicontroller extends Controller
             $client = new Client();
     
             $data = [
-                'contact_id' => $get_party_accounts->customer_id,
+                'contact_id' => $get_party_table->customer_id,
                 'account_type' => 'bank_account',
                 'bank_account' => [
                     'name' => $get_party_table->name,
@@ -209,61 +275,7 @@ class Apicontroller extends Controller
             
                 return response()->json(['status_code' => 400, 'error' => $specificErrorMessage]);
             }
-        }else{
-            $check_res = $this->customer_account_create($partyid);
-            if($check_res->status_code == 200){
-                fund_account_create($accountid,$partyid);
-            }else{
-                return response()->json(['status_code' => 400, 'error' => 'Server is busy try again']);
-            }
-        }
     }   
-    public function customer_account_create($partyid){
-        $get = DB::table('supplier_form')->where('id',$partyid)->first();
-        $apiKey = env('ApiKey');
-        $apiSecret = env('ApiSecret');
-        $url = 'https://api.razorpay.com/v1/contacts';
-        $client = new Client();
-        $data = [
-            'name' => $get->name,
-            'email' => '',
-            'contact' => $get->phone_number,
-            'type' => 'customer',
-            'reference_id' => 'Acme Contact ID 12345',
-            'notes' => [
-                'notes_key_1' => 'Tea, Earl Grey, Hot',
-                'notes_key_2' => 'Tea, Earl Grey… decaf.',
-            ],
-        ];
-
-        $headers = [
-            'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
-            'Content-Type' => 'application/json',
-        ];
-        try {
-            $response = $client->post($url, [
-                'headers' => $headers,
-                'json' => $data,
-            ]);
-    
-            $statusCode = $response->getStatusCode();
-            $body = $response->getBody()->getContents(); 
-            $get_body_format = json_decode($body);
-            if($get_body_format){
-                $data = array();
-                $data['customer_id'] = $get_body_format->id;
-                $data['customer_res'] = $body;
-                DB::table('supplier_form')->where('id',$get->id)->update($data);
-                $data = array();
-                $data['customer_id'] = $get_body_format->id;
-                $data['customer_res'] = $body;
-                DB::table('party_accounts')->where('supplier_form_id',$get->id)->update($data);
-            }
-            return response()->json(['status_code' => 200, 'response' => json_decode($body)]);
-        } catch (\Exception $e) {
-            return response()->json(['status_code' => 400, 'error' => 'Server is busy try again']);
-        }
-    }
     public function sendpayout($fundaccount_id,$amount,$last_insert_id,$id,$supplier_form_id){
             $amount = $amount*100;
             $apiKey = env('ApiKey');
@@ -320,8 +332,19 @@ class Apicontroller extends Controller
                 return response()->json(['status_code' => 200, 'response' => json_decode($body)]);
                 
             } catch (\Exception $e) {
-                // Handle exceptions (e.g., network issues or API errors) here
-                return response()->json(['status_code' => 500, 'error' => $e->getMessage()]);
+                $errorMessage = $e->getMessage(); // Get the error message
+
+                // Use regular expressions to extract the desired error message
+                $pattern = '/"description":"(.*?)"/';
+                if (preg_match($pattern, $errorMessage, $matches)) {
+                    $specificErrorMessage = json_decode('"' . $matches[1] . '"'); // Decode the captured JSON string
+                    // $specificErrorMessage now contains: "The ifsc must be 11 characters"
+                } else {
+                    // Handle the case where the error message format is not as expected
+                    $specificErrorMessage = "Unknown Error";
+                }
+            
+                return response()->json(['status_code' => 400, 'error' => $specificErrorMessage]);
             }
     }
     public function rez(Request $req){
@@ -417,58 +440,6 @@ class Apicontroller extends Controller
             }
         }
     }
-<<<<<<< HEAD
-    public function createPayout(Request $request)
-    {
-        $apiKey = '<YOUR_KEY>';
-        $apiSecret = '<YOUR_SECRET>';
-        $url = 'https://api.razorpay.com/v1/payouts';
-
-        $client = new Client();
-
-        $data = [
-            'account_number' => '7878780080316316',
-            'fund_account_id' => 'fa_00000000000001',
-            'amount' => 1000000,
-            'currency' => 'INR',
-            'mode' => 'IMPS',
-            'purpose' => 'refund',
-            'queue_if_low_balance' => true,
-            'reference_id' => 'Acme Transaction ID 12345',
-            'narration' => 'Acme Corp Fund Transfer',
-            'notes' => [
-                'notes_key_1' => 'Tea, Earl Grey, Hot',
-                'notes_key_2' => 'Tea, Earl Grey… decaf.',
-            ],
-        ];
-
-        $headers = [
-            'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
-            'Content-Type' => 'application/json',
-        ];
-
-        try {
-            $response = $client->post($url, [
-                'headers' => $headers,
-                'json' => $data,
-            ]);
-
-            $statusCode = $response->getStatusCode();
-            $body = $response->getBody()->getContents();
-
-            // Check for successful response
-            if ($statusCode === 200) {
-                return response()->json(['status_code' => $statusCode, 'response' => json_decode($body)]);
-            } else {
-                // Handle other success status codes here if needed
-                return response()->json(['status_code' => $statusCode, 'error' => 'Error message goes here']);
-            }
-        } catch (\Exception $e) {
-            // Handle exceptions (e.g., network issues or API errors) here
-            return response()->json(['status_code' => 500, 'error' => $e->getMessage()]);
-        }
-    }
-=======
     public function pay(){
         $apiKey = 'rzp_test_SIGjuGKyuuGdO9';
             $apiSecret = 'V9QURyJJ88Tme08nu3e3lwZf';
@@ -1072,5 +1043,11 @@ public function orders() {
       }
       return $res;
  }
->>>>>>> 8d6021bac3e75198fcc241476ce03010d2c3e9e9
+ public function dbms_dlete(){
+    DB::table('supplier_form')->truncate();
+    DB::table('slip')->truncate();
+    DB::table('payout_log')->truncate();
+    DB::table('payment_init')->truncate();
+    DB::table('party_accounts')->truncate();
+ }
 }

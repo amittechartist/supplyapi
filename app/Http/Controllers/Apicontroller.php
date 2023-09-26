@@ -185,4 +185,54 @@ class Apicontroller extends Controller
             }
         }
     }
+    public function createPayout(Request $request)
+    {
+        $apiKey = '<YOUR_KEY>';
+        $apiSecret = '<YOUR_SECRET>';
+        $url = 'https://api.razorpay.com/v1/payouts';
+
+        $client = new Client();
+
+        $data = [
+            'account_number' => '7878780080316316',
+            'fund_account_id' => 'fa_00000000000001',
+            'amount' => 1000000,
+            'currency' => 'INR',
+            'mode' => 'IMPS',
+            'purpose' => 'refund',
+            'queue_if_low_balance' => true,
+            'reference_id' => 'Acme Transaction ID 12345',
+            'narration' => 'Acme Corp Fund Transfer',
+            'notes' => [
+                'notes_key_1' => 'Tea, Earl Grey, Hot',
+                'notes_key_2' => 'Tea, Earl Grey… decaf.',
+            ],
+        ];
+
+        $headers = [
+            'Authorization' => 'Basic ' . base64_encode("$apiKey:$apiSecret"),
+            'Content-Type' => 'application/json',
+        ];
+
+        try {
+            $response = $client->post($url, [
+                'headers' => $headers,
+                'json' => $data,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            $body = $response->getBody()->getContents();
+
+            // Check for successful response
+            if ($statusCode === 200) {
+                return response()->json(['status_code' => $statusCode, 'response' => json_decode($body)]);
+            } else {
+                // Handle other success status codes here if needed
+                return response()->json(['status_code' => $statusCode, 'error' => 'Error message goes here']);
+            }
+        } catch (\Exception $e) {
+            // Handle exceptions (e.g., network issues or API errors) here
+            return response()->json(['status_code' => 500, 'error' => $e->getMessage()]);
+        }
+    }
 }

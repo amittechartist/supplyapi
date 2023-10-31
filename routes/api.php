@@ -61,3 +61,4 @@ Route::get('/userprofile',[ApiController::class,'userprofile']);
 Route::get('/con_email_edit/{id}',[ApiController::class,'con_email_edit']);
 //ORDERS
 Route::get('/orders',[ApiController::class,'orders']);
+Route::post('/eway_bill_insert',[ApiController::class,'eway_bill_insert']);

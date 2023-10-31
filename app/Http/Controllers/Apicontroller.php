@@ -1050,4 +1050,42 @@ public function orders() {
     DB::table('payment_init')->truncate();
     DB::table('party_accounts')->truncate();
  }
+ public function eway_bill_insert(Request $req){
+    $data = array();
+    $data['ewaybillno'] = $req->ewaybillno;
+    $data['mode'] = $req->mode;
+    $data['generatedby'] = $req->generatedby;
+    $data['supply_type'] = $req->supply_type;
+    $data['approx_distance'] = $req->approx_distance;
+    $data['transaction_type'] = $req->transaction_type;
+
+    $data['from_name'] = $req->from_name;
+    $data['from_gst'] = $req->from_gst;
+    $data['from_address'] = $req->from_address;
+    $data['from_pincode'] = $req->from_pincode;
+    $data['from_state'] = $req->from_state;
+
+    $data['to_name'] = $req->to_name;
+    $data['to_gst'] = $req->to_gst;
+    $data['to_address'] = $req->to_address;
+    $data['to_pincode'] = $req->to_pincode;
+    $data['to_state'] = $req->to_state;
+
+    $data['transporter_name'] = $req->transporter_name;
+    $data['transporter_id'] = $req->transporter_id;
+    $data['transporter_doc_no'] = $req->transporter_doc_no;
+    $data['transporter_date'] = $req->transporter_date;
+    $data['vehicle_no'] = $req->vehicle_no;
+    $data['vehicle_place'] = $req->vehicle_place;
+    $data['cewb_no'] = $req->cewb_no;
+
+    $data['generated_date'] = date('d-m-Y');
+    $data['generated_time'] = date("h:i A", time());
+    $data['valid_date'] = date('d-m-Y');
+    $data['valid_time'] = date("h:i A", time());
+
+    $lastid = DB::table('eway_bill')->insertGetId($data);
+    return $lastid;
+
+ }
 }

@@ -35,7 +35,6 @@ class Apicontroller extends Controller
         if($jsonData->status_code == 200){
             $accountDetails = json_decode($req->accountdetails);
             foreach($accountDetails as $key => $account){
-                
                 $data = array();
                 $data['supplier_form_id'] = $insert_id;
                 $data['account_no'] = $account->accountNumber;
@@ -1085,6 +1084,17 @@ public function orders() {
     $data['valid_time'] = date("h:i A", time());
 
     $lastid = DB::table('eway_bill')->insertGetId($data);
+    $product_details = json_decode($req->product_details);
+    foreach($product_details as $key => $list){
+        $data = array();
+        $data['last_id'] = $lastid;
+        $data['hsn_no'] = $list->hsn_no;
+        $data['product_no'] = $list->product_no;
+        $data['qty'] = $list->qty;
+        $data['taxable_amount'] = $list->taxable_amount;
+        $data['taxable_rate'] = $list->taxable_rate;
+        DB::table('eway_bill_products')->insert($data);
+    }
     return $lastid;
 
  }

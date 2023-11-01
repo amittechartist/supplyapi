@@ -62,3 +62,5 @@ Route::get('/con_email_edit/{id}',[ApiController::class,'con_email_edit']);
 //ORDERS
 Route::get('/orders',[ApiController::class,'orders']);
 Route::post('/eway_bill_insert',[ApiController::class,'eway_bill_insert']);
+Route::get('/eway_bill_list',[ApiController::class,'eway_bill_list']);
+Route::get('/pdf_download',[ApiController::class,'pdf_download']);

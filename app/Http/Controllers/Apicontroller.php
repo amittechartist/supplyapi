@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use DB;
 use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Client;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 class Apicontroller extends Controller
 {
     public function supplier_form_list(Request $req){
@@ -1057,19 +1057,16 @@ public function orders() {
     $data['supply_type'] = $req->supply_type;
     $data['approx_distance'] = $req->approx_distance;
     $data['transaction_type'] = $req->transaction_type;
-
     $data['from_name'] = $req->from_name;
     $data['from_gst'] = $req->from_gst;
     $data['from_address'] = $req->from_address;
     $data['from_pincode'] = $req->from_pincode;
     $data['from_state'] = $req->from_state;
-
     $data['to_name'] = $req->to_name;
     $data['to_gst'] = $req->to_gst;
     $data['to_address'] = $req->to_address;
     $data['to_pincode'] = $req->to_pincode;
     $data['to_state'] = $req->to_state;
-
     $data['transporter_name'] = $req->transporter_name;
     $data['transporter_id'] = $req->transporter_id;
     $data['transporter_doc_no'] = $req->transporter_doc_no;
@@ -1077,7 +1074,6 @@ public function orders() {
     $data['vehicle_no'] = $req->vehicle_no;
     $data['vehicle_place'] = $req->vehicle_place;
     $data['cewb_no'] = $req->cewb_no;
-
     $data['generated_date'] = date('d-m-Y');
     $data['generated_time'] = date("h:i A", time());
     $data['valid_date'] = date('d-m-Y');
@@ -1087,15 +1083,39 @@ public function orders() {
     $product_details = json_decode($req->product_details);
     foreach($product_details as $key => $list){
         $data = array();
-        $data['last_id'] = $lastid;
-        $data['hsn_no'] = $list->hsn_no;
-        $data['product_no'] = $list->product_no;
-        $data['qty'] = $list->qty;
-        $data['taxable_amount'] = $list->taxable_amount;
-        $data['taxable_rate'] = $list->taxable_rate;
+        $data['eway_bill_id'] = $lastid;
+        $data['hsn_no'] = $list->hsnCode;
+        $data['product_name'] = $list->paymentName;
+        $data['qty'] = $list->Quantity;
+        $data['taxable_amount'] = $list->taxableAmount;
+        $data['taxable_rate'] = $list->taxRate;
         DB::table('eway_bill_products')->insert($data);
     }
-    return $lastid;
-
+    if($lastid){
+        return response()->json(['status_code' => 201,'message' => 'Insert Successful'], 201);
+    }else{
+        return response()->json(['status_code' => 400,'message' => 'Failed'], 400);
+    }
  }
+ function eway_bill_list(){
+    $list = DB::table('eway_bill')->orderBy('id','DESC')->get();
+    return $list;
+ }
+ public function pdf_download(Request $req) {
+    $id = 2;
+    $get_data = DB::table('eway_bill')->where(['id'=>$id])->first();
+    if($get_data){
+        $product = DB::table('eway_bill_products')->where(['eway_bill_id'=>$id])->first();
+        $data = [
+            'alldeta' => $get_data,
+            'product' => $product
+        ];
+        
+        $pdf = Pdf::loadView('pdf', ['data' => $data]);
+     
+        return $pdf->download();
+    }else{
+        return response()->json(['status_code' => 400,'message' => 'Data not found'], 400);
+    }
+}
 }

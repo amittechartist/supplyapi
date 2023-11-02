@@ -1,3 +1,59 @@
+@php
+
+function get_state_name($id) {
+    $states = [
+        [ 'value' => '1' , 'label' => 'JAMMU AND KASHMIR'],
+        [ 'value' => '2' , 'label' => 'HIMACHAL PRADESH'],
+        [ 'value' => '3' , 'label' => 'PUNJAB'],
+        [ 'value' => '4' , 'label' => 'CHANDIGARH'],
+        [ 'value' => '5' , 'label' => 'UTTARAKHAND'],
+        [ 'value' => '6' , 'label' => 'HARYANA'],
+        [ 'value' => '7' , 'label' => 'DELHI'],
+        [ 'value' => '8' , 'label' => 'RAJASTHAN'],
+        [ 'value' => '9' , 'label' => 'UTTAR PRADESH'],
+        [ 'value' => '10' , 'label' => 'BIHAR'],
+        [ 'value' => '11' , 'label' => 'SIKKIM'],
+        [ 'value' => '12' , 'label' => 'ARUNACHAL PRADESH'],
+        [ 'value' => '13' , 'label' => 'NAGALAND'],
+        [ 'value' => '14' , 'label' => 'MANIPUR'],
+        [ 'value' => '15' , 'label' => 'MIZORAM'],
+        [ 'value' => '16' , 'label' => 'TRIPURA'],
+        [ 'value' => '17' , 'label' => 'MEGHALAYA'],
+        [ 'value' => '18' , 'label' => 'ASSAM'],
+        [ 'value' => '19' , 'label' => 'WEST BENGAL'],
+        [ 'value' => '20' , 'label' => 'JHARKHAND'],
+        [ 'value' => '21' , 'label' => 'ORISSA'],
+        [ 'value' => '22' , 'label' => 'CHHATTISGARH'],
+        [ 'value' => '23' , 'label' => 'MADHYA PRADESH'],
+        [ 'value' => '24' , 'label' => 'GUJARAT'],
+        [ 'value' => '26' , 'label' => 'DADAR AND NAGAR HAVELI & DAMAN AND DIU'],
+        [ 'value' => '27' , 'label' => 'MAHARASHTRA'],
+        [ 'value' => '29' , 'label' => 'KARNATAKA'],
+        [ 'value' => '30' , 'label' => 'GOA'],
+        [ 'value' => '31' , 'label' => 'LAKSHADWEEP'],
+        [ 'value' => '32' , 'label' => 'KERALA'],
+        [ 'value' => '33' , 'label' => 'TAMIL NADU'],
+        [ 'value' => '34' , 'label' => 'PUDUCHERRY'],
+        [ 'value' => '35' , 'label' => 'ANDAMAN AND NICOBAR'],
+        [ 'value' => '36' , 'label' => 'TELANGANA'],
+        [ 'value' => '37' , 'label' => 'ANDHRA PRADESH'],
+        [ 'value' => '38' , 'label' => 'LADAKH'],
+        [ 'value' => '97' , 'label' => 'OTHER TERRITORY'],
+        [ 'value' => '99' , 'label' => 'OTHER COUNTR']
+    ];
+
+    // Loop through the $states array to find a match and return the corresponding label
+    foreach ($states as $state) {
+        if ($state['value'] === $id) {
+            return $state['label'];
+        }
+    }
+
+    // Return a default value or an error message if the ID is not found
+    return 'State not found';
+}
+ 
+@endphp
 <!doctype html>
 <html lang="en">
 <head>
@@ -156,9 +212,8 @@
 
 <body>
     <p style="text-indent: 0pt;text-align: left;"><br /></p>
-    <p class="s1" style="padding-top: 7pt;padding-left: 7pt;text-indent: 0pt;text-align: left;">Doc No. : <b>Delivery
-            Challan - HE/DC/771/23-24</b></p>
-    <p class="s1" style="padding-left: 7pt;text-indent: 0pt;text-align: left;">Date : <b>22-Oct-23</b></p>
+    <p class="s1" style="padding-top: 7pt;padding-left: 7pt;text-indent: 0pt;text-align: left;">Doc No. : <b></b></p>
+    <p class="s1" style="padding-left: 7pt;text-indent: 0pt;text-align: left;">Date : <b>{{$data['alldeta']->generated_date}}</b></p>
     <h1 style="padding-top: 4pt;padding-left: 7pt;text-indent: 0pt;text-align: center;width: 786px;font-size: 30px;padding-bottom: 80px;">e-Way Bill</h1>
     <p style="padding-left: 7pt;text-indent: 0pt;line-height: 1pt;text-align: left;" />
     <p style="text-indent: 0pt;text-align: left;"><br /></p>
@@ -239,30 +294,29 @@
         <tr style="height:17pt">
             <td style="width:245pt">
                 <p class="s3" style="padding-left: 4pt;text-indent: 0pt;text-align: left;">From</p>
-                <p class="s4" style="padding-top: 3pt;padding-left: 2pt;text-indent: 0pt;text-align: left;">HEMANTH
-                    ENTERPRISES</p>
+                <p class="s4" style="padding-top: 3pt;padding-left: 2pt;text-indent: 0pt;text-align: left;">{{$data['alldeta']->from_name}}</p>
             </td>
             <td style="width:139pt">
-                <p class="s4" style="padding-top: 3pt;padding-left: 4pt;text-indent: 0pt;text-align: left;">ITC LTD PSPD
+                <p class="s4" style="padding-top: 3pt;padding-left: 4pt;text-indent: 0pt;text-align: left;">{{$data['alldeta']->to_name}}
                 </p>
             </td>
         </tr>
         <tr style="height:15pt">
             <td style="width:245pt">
                 <p class="s4" style="padding-top: 2pt;padding-left: 2pt;text-indent: 0pt;text-align: left;">GSTIN :
-                    21BECPH0744H1Z4</p>
+                    {{$data['alldeta']->from_gst}}</p>
             </td>
             <td style="width:139pt">
                 <p class="s4" style="padding-top: 2pt;padding-left: 4pt;text-indent: 0pt;text-align: left;">GSTIN :
-                    36AAACI5950L1ZB</p>
+                    {{$data['alldeta']->to_gst}}</p>
             </td>
         </tr>
         <tr style="height:18pt">
             <td style="width:245pt">
-                <p class="s4" style="padding-top: 2pt;padding-left: 2pt;text-indent: 0pt;text-align: left;">Odisha</p>
+                <p class="s4" style="padding-top: 2pt;padding-left: 2pt;text-indent: 0pt;text-align: left;">{{get_state_name($data['alldeta']->from_state)}}</p>
             </td>
             <td style="width:139pt">
-                <p class="s4" style="padding-top: 2pt;padding-left: 4pt;text-indent: 0pt;text-align: left;">Telangana
+                <p class="s4" style="padding-top: 2pt;padding-left: 4pt;text-indent: 0pt;text-align: left;">{{get_state_name($data['alldeta']->to_state)}}
                 </p>
             </td>
         </tr>
@@ -279,12 +333,12 @@
             <td style="width:245pt;border-bottom-style:solid;border-bottom-width:1pt">
                 <p class="s4"
                     style="padding-top: 3pt;padding-left: 2pt;padding-right: 38pt;text-indent: 0pt;line-height: 115%;text-align: left;">
-                    Jeypur Malkangiri Road, Boipariguda Koraput JEYPORE Odisha 764043</p>
+                    {{$data['alldeta']->from_address}} {{$data['alldeta']->from_pincode}}</p>
             </td>
             <td style="width:139pt;border-bottom-style:solid;border-bottom-width:1pt">
                 <p class="s4"
                     style="padding-top: 3pt;padding-left: 4pt;text-indent: 0pt;line-height: 115%;text-align: left;">
-                    Sarapaka, Bhadradri Kothagudem Badradri Telangana 507111</p>
+                    {{$data['alldeta']->to_address}} {{$data['alldeta']->to_pincode}}</p>
             </td>
         </tr>
         <tr style="height:23pt">
@@ -342,29 +396,29 @@
                     (I)</p>
             </td>
         </tr>
-
+        @foreach($data['product'] as $list)
+        
         <tr style="height:30pt">
             <td style="width:245pt;">
                 <p class="s5"
                     style="padding-top: 4pt;padding-left: 41pt;text-indent: -39pt;line-height: 12pt;text-align: left;">
-                    44039800 <span class="s4">EUCALYPTUS DEBARKED WOOD &amp; EUCALYPTUS DEBARKED WOOD</span></p>
+                    {{$list->hsn_no}} <span class="s4">{{$list->product_name}}</span></p>
             </td>
             <td style="width:139pt;">
-                <p class="s4" style="padding-top: 7pt;padding-left: 85pt;text-indent: 0pt;text-align: left;">25.62 MTS
+                <p class="s4" style="padding-top: 7pt;padding-left: 85pt;text-indent: 0pt;text-align: left;">{{$list->qty}} MTS
                 </p>
             </td>
             <td style="width:62pt;">
                 <p class="s3" style="padding-top: 6pt;padding-left: 4pt;text-indent: 0pt;text-align: center;">
-                    1,79,340.00</p>
+                    {{$list->taxable_amount}}</p>
             </td>
             <td style="width:51pt;">
                 <p class="s4"
                     style="padding-top: 7pt;padding-left: 3pt;padding-right: 5pt;text-indent: 0pt;text-align: center;">
-                    18</p>
+                    {{$list->taxable_rate}}</p>
             </td>
         </tr>
-        
-
+        @endforeach
     </table>
     <table style="border-collapse:collapse;margin-left:5pt;margin-bottom:5pt" cellspacing="0">
         <tr style="height:23pt">
@@ -426,12 +480,12 @@
                 <div class="custom-td-style-test-box">
                     <span class="f-title">Transporter ID</span>
                     <span class="m-title">:</span>
-                    <span class="l-title"></span>
+                    <span class="l-title">{{$data['alldeta']->transporter_id}}</span>
                 </div>
                 <div class="custom-td-style-test-box">
                     <span class="f-title">Name </span>
                     <span class="m-title">:</span>
-                    <span class="l-title"></span>
+                    <span class="l-title">{{$data['alldeta']->transporter_name}}</span>
                 </div>
             </td>
             <td class="custom-td-style">
@@ -450,12 +504,12 @@
                 <div class="custom-td-style-test-box">
                     <span class="f-title">Doc No.</span>
                     <span class="m-title">:</span>
-                    <span class="l-title"></span>
+                    <span class="l-title">{{$data['alldeta']->transporter_doc_no}}</span>
                 </div>
                 <div class="custom-td-style-test-box">
                     <span class="f-title">Date</span>
                     <span class="m-title">:</span>
-                    <span class="l-title"></span>
+                    <span class="l-title">{{$data['alldeta']->transporter_date}}</span>
                 </div>
             </td>
         </tr>
@@ -478,21 +532,21 @@
                 <div class="custom-td-style-test-box">
                     <span class="f-title">Vehicle No.</span>
                     <span class="m-title">:</span>
-                    <span class="l-title"></span>
+                    <span class="l-title">{{$data['alldeta']->vehicle_no}}</span>
                 </div>
             </td>
             <td class="custom-td-style">
                 <div class="custom-td-style-test-box">
                     <span class="f-title">From</span>
                     <span class="m-title">:</span>
-                    <span class="l-title"></span>
+                    <span class="l-title">{{$data['alldeta']->vehicle_place}}</span>
                 </div>
             </td>
             <td class="custom-td-style">
                 <div class="custom-td-style-test-box">
                     <span class="f-title">CEWB No. </span>
                     <span class="m-title">:</span>
-                    <span class="l-title"></span>
+                    <span class="l-title">{{$data['alldeta']->cewb_no}}</span>
                 </div>
 
             </td>

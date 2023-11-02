@@ -1101,16 +1101,15 @@ public function orders() {
     $list = DB::table('eway_bill')->orderBy('id','DESC')->get();
     return $list;
  }
- public function pdf_download(Request $req) {
-    $id = 2;
+ public function pdf_download(Request $req,$mainid) {
+    $id = $mainid;
     $get_data = DB::table('eway_bill')->where(['id'=>$id])->first();
     if($get_data){
-        $product = DB::table('eway_bill_products')->where(['eway_bill_id'=>$id])->first();
+        $product = DB::table('eway_bill_products')->where(['eway_bill_id'=>$id])->get();
         $data = [
             'alldeta' => $get_data,
             'product' => $product
         ];
-        
         $pdf = Pdf::loadView('pdf', ['data' => $data]);
      
         return $pdf->download();
